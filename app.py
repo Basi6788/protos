@@ -11,13 +11,13 @@ from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
 from google.protobuf.message import Message
-from google.protobuf.json_format import MessageToDict
+from google.protobuf.json_format import MessageToDict, ParseDict # 🔥 ENCODE KE LIYE NAYA IMPORT
 
 app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 🧠 1. ALL PROTOBUFS INJECTED DIRECTLY (NO FOLDERS NEEDED)
+# 🧠 1. ALL PROTOBUFS INJECTED DIRECTLY (MONOLITHIC)
 # ==========================================
 _sym_db = _symbol_database.Default()
 
