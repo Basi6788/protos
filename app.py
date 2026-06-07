@@ -3,21 +3,21 @@ from flask_cors import CORS
 import base64
 import time
 import inspect
+import requests
+import json
 from collections import deque
-
-# --- PROTOBUF CORE LIBS ---
 from google.protobuf import descriptor as _descriptor
 from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
 from google.protobuf.message import Message
-from google.protobuf.json_format import MessageToDict, ParseDict # 🔥 ParseDict ADD KIYA HAI ENCODING KE LIYE
+from google.protobuf.json_format import MessageToDict, ParseDict
 
 app = Flask(__name__)
 CORS(app)
 
 # ==========================================
-# 🧠 1. ALL PROTOBUFS INJECTED DIRECTLY (NO FOLDERS NEEDED)
+# 🧠 1. ALL PROTOBUFS INJECTED DIRECTLY
 # ==========================================
 _sym_db = _symbol_database.Default()
 
@@ -27,30 +27,15 @@ try:
     _builder.BuildMessageAndEnumDescriptors(DESC1, globals())
     _builder.BuildTopDescriptorsAndMessages(DESC1, 'account_show_pb2', globals())
 
-    # 2. core_pb2
-    DESC2 = _descriptor_pool.Default().AddSerializedFile(b'\n\x0csample.proto\"*\n\x12SearchWorkshopCode\x12\t\n\x01\x61\x18\x01 \x01(\t\x12\t\n\x01\x62\x18\x02 \x01(\x05\"-\n\x15GetPlayerPersonalShow\x12\t\n\x01\x61\x18\x01 \x01(\x03\x12\t\n\x01\x62\x18\x02 \x01(\x05\"\xf8\x08\n\x0cJwtGenerator\x12\x11\n\ttimestamp\x18\x03 \x01(\t\x12\x11\n\tgame_name\x18\x04 \x01(\t\x12\x14\n\x0cversion_code\x18\x05 \x01(\x05\x12\x13\n\x0b\x61pp_version\x18\x07 \x01(\t\x12\x17\n\x0f\x61ndroid_version\x18\x08 \x01(\t\x12\x13\n\x0b\x64\x65vice_type\x18\t \x01(\t\x12\x18\n\x10network_provider\x18\n \x01(\t\x12\x14\n\x0cnetwork_type\x18\x0b \x01(\t\x12\x14\n\x0cscreen_width\x18\x0c \x01(\x05\x12\x15\n\rscreen_height\x18\r \x01(\x05\x12\x0b\n\x03\x64pi\x18\x0e \x01(\t\x12\x10\n\x08\x63pu_info\x18\x0f \x01(\t\x12\x0b\n\x03\x66ps\x18\x10 \x01(\x05\x12\x11\n\tgpu_model\x18\x11 \x01(\t\x12\x16\n\x0eopengl_version\x18\x12 \x01(\t\x12\x11\n\tdevice_id\x18\x13 \x01(\t\x12\x12\n\nip_address\x18\x14 \x01(\t\x12\x10\n\x08language\x18\x15 \x01(\t\x12\x13\n\x0b\x64\x65vice_hash\x18\x16 \x01(\t\x12\x14\n\x0cos_api_level\x18\x17 \x01(\t\x12\x15\n\ros_build_type\x18\x18 \x01(\t\x12\x14\n\x0c\x64\x65vice_model\x18\x19 \x01(\t\x12\x19\n\x11package_signature\x18\x1d \x01(\t\x12\x12\n\nuser_level\x18\x1e \x01(\x05\x12\x14\n\x0c\x63\x61rrier_name\x18) \x01(\t\x12\x1a\n\x12network_generation\x18* \x01(\t\x12\x15\n\rapp_signature\x18\x39 \x01(\t\x12\x11\n\tplayer_id\x18< \x01(\x03\x12\x12\n\nsession_id\x18= \x01(\x03\x12\x10\n\x08match_id\x18> \x01(\x05\x12\r\n\x05score\x18@ \x01(\x03\x12\x13\n\x0btotal_score\x18\x41 \x01(\x03\x12\x12\n\nhigh_score\x18\x42 \x01(\x03\x12\x11\n\tmax_score\x18\x43 \x01(\x03\x12\x13\n\x0bplayer_rank\x18I \x01(\x05\x12\x17\n\x0fnative_lib_path\x18J \x01(\t\x12\x15\n\ris_debuggable\x18L \x01(\x05\x12\x12\n\napp_source\x18M \x01(\t\x12\x0f\n\x07is_beta\x18N \x01(\x05\x12\x11\n\tis_tester\x18O \x01(\x05\x12\x1b\n\x13target_architecture\x18Q \x01(\t\x12\x18\n\x10\x61pp_version_code\x18S \x01(\t\x12\x19\n\x11\x61pp_revision_code\x18U \x01(\x05\x12\x14\n\x0cgraphics_api\x18V \x01(\t\x12\x18\n\x10max_texture_size\x18W \x01(\x05\x12\x17\n\x0fprocessor_count\x18X \x01(\x05\x12\x16\n\x0e\x65ncryption_key\x18Y \x01(\t\x12\x19\n\x11\x66rame_buffer_size\x18\\ \x01(\x05\x12\x15\n\rplatform_type\x18] \x01(\t\x12\x16\n\x0esecurity_token\x18^ \x01(\t\x12\x18\n\x10\x64isplay_settings\x18` \x01(\t\x12\x14\n\x0cis_logged_in\x18\x61 \x01(\x05\x62\x06proto3')
+    # 2. freefire_pb2 (LoginReq, LoginRes)
+    DESC2 = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x46reeFire.proto\"c\n\x08LoginReq\x12\x0f\n\x07open_id\x18\x16 \x01(\t\x12\x14\n\x0copen_id_type\x18\x17 \x01(\t\x12\x13\n\x0blogin_token\x18\x1d \x01(\t\x12\x1b\n\x13orign_platform_type\x18\x63 \x01(\t\"]\n\x10\x42lacklistInfoRes\x12\x1e\n\nban_reason\x18\x01 \x01(\x0e\x32\n.BanReason\x12\x17\n\x0f\x65xpire_duration\x18\x02 \x01(\r\x12\x10\n\x08\x62\x61n_time\x18\x03 \x01(\r\"f\n\x0eLoginQueueInfo\x12\r\n\x05\x61llow\x18\x01 \x01(\x08\x12\x16\n\x0equeue_position\x18\x02 \x01(\r\x12\x16\n\x0eneed_wait_secs\x18\x03 \x01(\r\x12\x15\n\rqueue_is_full\x18\x04 \x01(\x08\"\xa0\x03\n\x08LoginRes\x12\x12\n\naccount_id\x18\x01 \x01(\x04\x12\x13\n\x0block_region\x18\x02 \x01(\t\x12\x13\n\x0bnoti_region\x18\x03 \x01(\t\x12\x11\n\tip_region\x18\x04 \x01(\t\x12\x19\n\x11\x61gora_environment\x18\x05 \x01(\t\x12\x19\n\x11new_active_region\x18\x06 \x01(\t\x12\x19\n\x11recommend_regions\x18\x07 \x03(\t\x12\r\n\x05token\x18\x08 \x01(\t\x12\x0b\n\x03ttl\x18\t \x01(\r\x12\x12\n\nserver_url\x18\n \x01(\t\x12\x16\n\x0e\x65mulator_score\x18\x0b \x01(\r\x12$\n\tblacklist\x18\x0c \x01(\x0b\x32\x11.BlacklistInfoRes\x12#\n\nqueue_info\x18\r \x01(\x0b\x32\x0f.LoginQueueInfo\x12\x0e\n\x06tp_url\x18\x0e \x01(\t\x12\x15\n\rapp_server_id\x18\x0f \x01(\r\x12\x0f\n\x07\x61no_url\x18\x10 \x01(\t\x12\x0f\n\x07ip_city\x18\x11 \x01(\t\x12\x16\n\x0eip_subdivision\x18\x12 \x01(\t*\xa8\x01\n\tBanReason\x12\x16\n\x12\x42\x41N_REASON_UNKNOWN\x10\x00\x12\x1b\n\x17\x42\x41N_REASON_IN_GAME_AUTO\x10\x01\x12\x15\n\x11\x42\x41N_REASON_REFUND\x10\x02\x12\x15\n\x11\x42\x41N_REASON_OTHERS\x10\x03\x12\x16\n\x12\x42\x41N_REASON_SKINMOD\x10\x04\x12 \n\x1b\x42\x41N_REASON_IN_GAME_AUTO_NEW\x10\xf6\x07\x62\x06proto3')
     _builder.BuildMessageAndEnumDescriptors(DESC2, globals())
-    _builder.BuildTopDescriptorsAndMessages(DESC2, 'sample_pb2', globals())
+    _builder.BuildTopDescriptorsAndMessages(DESC2, 'freefire_pb2', globals())
 
-    # 3. count_likes_pb2
-    DESC3 = _descriptor_pool.Default().AddSerializedFile(b'\n\x10like_count.proto\"?\n\tBasicInfo\x12\x0b\n\x03UID\x18\x01 \x01(\x03\x12\x16\n\x0ePlayerNickname\x18\x03 \x01(\t\x12\r\n\x05Likes\x18\x15 \x01(\x03\"\'\n\x04Info\x12\x1f\n\x0b\x41\x63\x63ountInfo\x18\x01 \x01(\x0b\x32\n.BasicInfob\x06proto3')
+    # 3. register_req_pb2
+    DESC3 = _descriptor_pool.Default().AddSerializedFile(b'\n\x19PlatformRegisterReq.proto\x12\x05proto\"\xa3\x02\n\x13PlatformRegisterReq\x12\x10\n\x08nickname\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\t\x12\x0f\n\x07open_id\x18\x03 \x01(\t\x12\x11\n\tavatar_id\x18\x05 \x01(\r\x12\x15\n\rplatform_type\x18\x06 \x01(\r\x12\x17\n\x0fplatform_sdk_id\x18\x07 \x01(\r\x12\x36\n\rusing_version\x18\r \x01(\x0e\x32\x1f.proto.EAuth_ClientUsingVersion\x12\x1e\n\x16platform_register_info\x18\x0e \x01(\x0c\x12\x10\n\x08language\x18\x0f \x01(\t\x12\x12\n\nunknown_16\x18\x10 \x01(\r\x12\x12\n\nunknown_17\x18\x11 \x01(\r*\xae\x01\n\x18\x45\x41uth_ClientUsingVersion\x12\x1b\n\x17\x43lientUsingVersion_NONE\x10\x00\x12\x1d\n\x19\x43lientUsingVersion_NORMAL\x10\x01\x12\x1a\n\x16\x43lientUsingVersion_MAX\x10\x02\x12\x1a\n\x16\x43lientUsingVersion_FFI\x10\x03\x12\x1e\n\x1a\x43lientUsingVersion_MAX_HPE\x10\x04\x62\x06proto3')
     _builder.BuildMessageAndEnumDescriptors(DESC3, globals())
-    _builder.BuildTopDescriptorsAndMessages(DESC3, 'count_likes_pb2', globals())
-
-    # 4. freefire_pb2
-    DESC4 = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x46reeFire.proto\"c\n\x08LoginReq\x12\x0f\n\x07open_id\x18\x16 \x01(\t\x12\x14\n\x0copen_id_type\x18\x17 \x01(\t\x12\x13\n\x0blogin_token\x18\x1d \x01(\t\x12\x1b\n\x13orign_platform_type\x18\x63 \x01(\t\"]\n\x10\x42lacklistInfoRes\x12\x1e\n\nban_reason\x18\x01 \x01(\x0e\x32\n.BanReason\x12\x17\n\x0f\x65xpire_duration\x18\x02 \x01(\r\x12\x10\n\x08\x62\x61n_time\x18\x03 \x01(\r\"f\n\x0eLoginQueueInfo\x12\r\n\x05\x61llow\x18\x01 \x01(\x08\x12\x16\n\x0equeue_position\x18\x02 \x01(\r\x12\x16\n\x0eneed_wait_secs\x18\x03 \x01(\r\x12\x15\n\rqueue_is_full\x18\x04 \x01(\x08\"\xa0\x03\n\x08LoginRes\x12\x12\n\naccount_id\x18\x01 \x01(\x04\x12\x13\n\x0block_region\x18\x02 \x01(\t\x12\x13\n\x0bnoti_region\x18\x03 \x01(\t\x12\x11\n\tip_region\x18\x04 \x01(\t\x12\x19\n\x11\x61gora_environment\x18\x05 \x01(\t\x12\x19\n\x11new_active_region\x18\x06 \x01(\t\x12\x19\n\x11recommend_regions\x18\x07 \x03(\t\x12\r\n\x05token\x18\x08 \x01(\t\x12\x0b\n\x03ttl\x18\t \x01(\r\x12\x12\n\nserver_url\x18\n \x01(\t\x12\x16\n\x0e\x65mulator_score\x18\x0b \x01(\r\x12$\n\tblacklist\x18\x0c \x01(\x0b\x32\x11.BlacklistInfoRes\x12#\n\nqueue_info\x18\r \x01(\x0b\x32\x0f.LoginQueueInfo\x12\x0e\n\x06tp_url\x18\x0e \x01(\t\x12\x15\n\rapp_server_id\x18\x0f \x01(\r\x12\x0f\n\x07\x61no_url\x18\x10 \x01(\t\x12\x0f\n\x07ip_city\x18\x11 \x01(\t\x12\x16\n\x0eip_subdivision\x18\x12 \x01(\t*\xa8\x01\n\tBanReason\x12\x16\n\x12\x42\x41N_REASON_UNKNOWN\x10\x00\x12\x1b\n\x17\x42\x41N_REASON_IN_GAME_AUTO\x10\x01\x12\x15\n\x11\x42\x41N_REASON_REFUND\x10\x02\x12\x15\n\x11\x42\x41N_REASON_OTHERS\x10\x03\x12\x16\n\x12\x42\x41N_REASON_SKINMOD\x10\x04\x12 \n\x1b\x42\x41N_REASON_IN_GAME_AUTO_NEW\x10\xf6\x07\x62\x06proto3')
-    _builder.BuildMessageAndEnumDescriptors(DESC4, globals())
-    _builder.BuildTopDescriptorsAndMessages(DESC4, 'freefire_pb2', globals())
-
-    # 5. register_req_pb2
-    DESC5 = _descriptor_pool.Default().AddSerializedFile(b'\n\x19PlatformRegisterReq.proto\x12\x05proto\"\xa3\x02\n\x13PlatformRegisterReq\x12\x10\n\x08nickname\x18\x01 \x01(\t\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x02 \x01(\t\x12\x0f\n\x07open_id\x18\x03 \x01(\t\x12\x11\n\tavatar_id\x18\x05 \x01(\r\x12\x15\n\rplatform_type\x18\x06 \x01(\r\x12\x17\n\x0fplatform_sdk_id\x18\x07 \x01(\r\x12\x36\n\rusing_version\x18\r \x01(\x0e\x32\x1f.proto.EAuth_ClientUsingVersion\x12\x1e\n\x16platform_register_info\x18\x0e \x01(\x0c\x12\x10\n\x08language\x18\x0f \x01(\t\x12\x12\n\nunknown_16\x18\x10 \x01(\r\x12\x12\n\nunknown_17\x18\x11 \x01(\r*\xae\x01\n\x18\x45\x41uth_ClientUsingVersion\x12\x1b\n\x17\x43lientUsingVersion_NONE\x10\x00\x12\x1d\n\x19\x43lientUsingVersion_NORMAL\x10\x01\x12\x1a\n\x16\x43lientUsingVersion_MAX\x10\x02\x12\x1a\n\x16\x43lientUsingVersion_FFI\x10\x03\x12\x1e\n\x1a\x43lientUsingVersion_MAX_HPE\x10\x04\x62\x06proto3')
-    _builder.BuildMessageAndEnumDescriptors(DESC5, globals())
-    _builder.BuildTopDescriptorsAndMessages(DESC5, 'register_req_pb2', globals())
-
-    # 6. send_like_pb2
-    DESC6 = _descriptor_pool.Default().AddSerializedFile(b'\n\nlike.proto\"#\n\x04like\x12\x0b\n\x03uid\x18\x01 \x01(\x03\x12\x0e\n\x06region\x18\x02 \x01(\tb\x06proto3')
-    _builder.BuildMessageAndEnumDescriptors(DESC6, globals())
-    _builder.BuildTopDescriptorsAndMessages(DESC6, 'send_like_pb2', globals())
+    _builder.BuildTopDescriptorsAndMessages(DESC3, 'register_req_pb2', globals())
 
     print("✅ All Protos Injected Successfully!")
 except Exception as e:
@@ -67,7 +52,28 @@ for name, obj in list(globals().items()):
 print(f"🚀 Loaded {len(PROTO_MAP)} Proto Classes into Memory!")
 
 # ==========================================
-# 📋 3. LOGGING SYSTEM
+# 🔐 3. AES CRYPTO HELPERS
+# ==========================================
+from Crypto.Cipher import AES
+import hashlib
+
+AES_KEY = b'Yg&tc%DEuh6%Zc^8'
+AES_IV = b'6oyZDr22E3ychjM%'
+
+def encrypt_aes(data: bytes) -> bytes:
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES_IV)
+    pad_len = 16 - (len(data) % 16)
+    padded_data = data + bytes([pad_len] * pad_len)
+    return cipher.encrypt(padded_data)
+
+def decrypt_aes(data: bytes) -> bytes:
+    cipher = AES.new(AES_KEY, AES.MODE_CBC, AES.IV)
+    decrypted = cipher.decrypt(data)
+    pad_len = decrypted[-1]
+    return decrypted[:-pad_len]
+
+# ==========================================
+# 📋 4. LOGGING SYSTEM
 # ==========================================
 api_logs = deque(maxlen=200)
 
@@ -84,8 +90,10 @@ def add_log(action, msg_name, status, payload, response=""):
     api_logs.appendleft(log_entry)
 
 # ==========================================
-# 🚀 4. API ENDPOINTS 
+# 🚀 5. API ENDPOINTS
 # ==========================================
+
+# Decode endpoint (existing)
 @app.route('/api/decode', methods=['POST'])
 def decode_proto():
     try:
@@ -111,12 +119,113 @@ def decode_proto():
         add_log("DECODE_ERROR", msg_name, 500, b64_data[:50] if b64_data else "", str(e))
         return jsonify({"error": str(e)}), 500
 
+# 🆕 JWT GENERATE ENDPOINT
+@app.route('/api/generate-jwt', methods=['POST'])
+def generate_jwt():
+    try:
+        data = request.json
+        print(f"[JWT] Received: {data}")
+        
+        # Extract UID and password
+        guest_info = data.get('guest_account_info', {})
+        uid = guest_info.get('com.garena.msdk.guest_uid', '')
+        password = guest_info.get('com.garena.msdk.guest_password', '')
+        
+        if not uid or not password:
+            return jsonify({"error": "Missing UID or password"}), 400
+        
+        # Clean password
+        password = password.replace(' ', '').replace('\n', '').replace('\r', '')
+        
+        print(f"[JWT] Generating for UID: {uid}")
+        
+        # Create LoginReq protobuf
+        login_req = PROTO_MAP['LoginReq']()
+        login_req.open_id = password
+        login_req.open_id_type = "5"  # Guest type
+        login_req.login_token = password
+        login_req.orign_platform_type = "1"  # Android
+        
+        # Serialize and encrypt
+        serialized = login_req.SerializeToString()
+        encrypted = encrypt_aes(serialized)
+        
+        # Send to Garena server
+        headers = {
+            'Host': 'loginbp.ggpolarbear.com',
+            'Content-Type': 'application/octet-stream',
+            'User-Agent': 'FreeFire/2.95.0 Android'
+        }
+        
+        response = requests.post(
+            'https://loginbp.ggpolarbear.com/MajorLogin',
+            data=encrypted,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code != 200:
+            add_log("JWT_FAIL", "MajorLogin", response.status_code, f"UID: {uid}", response.text[:200])
+            return jsonify({"error": f"Garena server error: {response.status_code}"}), 500
+        
+        # Decrypt response
+        encrypted_resp = response.content
+        decrypted = decrypt_aes(encrypted_resp)
+        
+        # Parse LoginRes
+        login_res = PROTO_MAP['LoginRes']()
+        login_res.ParseFromString(decrypted)
+        
+        result = MessageToDict(login_res, preserving_proto_field_name=True)
+        
+        if result.get('token'):
+            add_log("JWT_SUCCESS", "MajorLogin", 200, f"UID: {uid}", "Token generated")
+            return jsonify({
+                "success": True,
+                "token": result['token'],
+                "uid": uid,
+                "server_url": result.get('server_url', ''),
+                "lock_region": result.get('lock_region', 'Global')
+            })
+        else:
+            add_log("JWT_FAIL", "MajorLogin", 500, f"UID: {uid}", "No token in response")
+            return jsonify({"error": "No token in response", "response": result}), 500
+            
+    except Exception as e:
+        print(f"[JWT Error] {e}")
+        add_log("JWT_ERROR", "MajorLogin", 500, "", str(e))
+        return jsonify({"error": str(e)}), 500
+
+# Encode endpoint (for Node.js proxy)
+@app.route('/api/encode', methods=['POST'])
+def encode_proto():
+    try:
+        data = request.json
+        msg_name = data.get('msg_name')
+        json_data = data.get('data')
+        
+        if not msg_name or msg_name not in PROTO_MAP:
+            return jsonify({"error": f"Proto message '{msg_name}' not found."}), 404
+        
+        proto_obj = PROTO_MAP[msg_name]()
+        ParseDict(json_data, proto_obj)
+        
+        serialized = proto_obj.SerializeToString()
+        b64_result = base64.b64encode(serialized).decode('ascii')
+        
+        add_log("ENCODE_SUCCESS", msg_name, 200, json_data, f"Size: {len(serialized)} bytes")
+        return jsonify({"success": True, "data": b64_result})
+        
+    except Exception as e:
+        add_log("ENCODE_ERROR", msg_name, 500, "", str(e))
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/logs/sync', methods=['GET'])
 def get_logs():
     return jsonify(list(api_logs))
 
 # ==========================================
-# 👑 5. PYTHON API DASHBOARD
+# 👑 6. PYTHON API DASHBOARD
 # ==========================================
 @app.route('/', methods=['GET'])
 def dashboard():
@@ -126,39 +235,46 @@ def dashboard():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>👑 PYTHON CORE | KING NEXUS</title>
+        <title>👑 KING NEXUS | Python Core</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-            body { background-color: #030008; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
-            h1 { font-family: 'Orbitron', sans-serif; }
-            ::-webkit-scrollbar { width: 4px; height: 4px; }
-            ::-webkit-scrollbar-track { background: #000; }
+            * { font-family: 'Inter', sans-serif; }
+            body { background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 50%, #0a0a2e 100%); min-height: 100vh; }
+            .glass-panel { background: rgba(15, 15, 35, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.3); transition: all 0.3s; }
+            .glass-panel:hover { border-color: rgba(139, 92, 246, 0.7); box-shadow: 0 0 25px rgba(139, 92, 246, 0.2); }
+            .glow-text { text-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+            .btn-primary { background: linear-gradient(135deg, #a855f7, #7c3aed); transition: all 0.2s; }
+            .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.4); }
+            ::-webkit-scrollbar { width: 4px; }
+            ::-webkit-scrollbar-track { background: #0a0a0f; }
             ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 10px; }
-            .aurora-glow { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), inset 0 0 10px rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.5); }
-            .glass-panel { background: rgba(10, 10, 15, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(139, 92, 246, 0.2); transition: all 0.3s ease; }
-            .glass-panel:hover { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); border-color: rgba(139, 92, 246, 0.6); }
-            pre { white-space: pre-wrap; word-wrap: break-word; font-size: 9px; line-height: 1.4; }
+            pre { white-space: pre-wrap; word-wrap: break-word; font-size: 10px; }
         </style>
     </head>
-    <body class="p-3 sm:p-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-[#030008] to-black min-h-screen">
+    <body class="p-4 md:p-8">
         <div class="max-w-7xl mx-auto">
-            <header class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b border-purple-500/20 pb-4 gap-4">
-                <div class="flex items-center gap-3 w-full sm:w-auto justify-center sm:justify-start">
-                    <div class="p-2 bg-purple-900/30 rounded-full aurora-glow flex-shrink-0">
-                        <span class="text-xl">👑</span>
+            <div class="glass-panel rounded-2xl p-6 mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                            <i class="fab fa-python text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl md:text-4xl font-black glow-text" style="background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                                KING NEXUS | PYTHON CORE
+                            </h1>
+                            <p class="text-xs text-purple-300/80">Protobuf Decode/Encode Engine + JWT Generator</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 class="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 tracking-widest uppercase">PYTHON_CORE</h1>
-                        <p class="text-[10px] text-purple-400/70 mt-1 uppercase tracking-[0.2em] text-center sm:text-left">King Nexus Decode Engine</p>
+                    <div class="text-xs bg-purple-900/30 border border-purple-500/50 px-4 py-2 rounded-full text-purple-300">
+                        <i class="fas fa-database mr-1"></i> PROTO LOADED: """ + str(len(PROTO_MAP)) + """
                     </div>
                 </div>
-                <div class="text-[10px] sm:text-xs bg-purple-900/30 border border-purple-500/50 px-4 py-2 rounded-full text-purple-300 font-black tracking-widest aurora-glow whitespace-nowrap">
-                    PROTOS ONLINE: <span id="proto-count" class="text-white">""" + str(len(PROTO_MAP)) + """</span>
-                </div>
-            </header>
-            <div id="logs-container" class="space-y-4"></div>
+            </div>
+            
+            <div id="logs-container" class="space-y-3"></div>
         </div>
 
         <script>
@@ -166,33 +282,40 @@ def dashboard():
                 try {
                     const res = await fetch('/api/logs/sync');
                     const logs = await res.json();
-                    
-                    document.getElementById('logs-container').innerHTML = logs.map(l => {
+                    const container = document.getElementById('logs-container');
+                    if (logs.length === 0) {
+                        container.innerHTML = '<div class="text-center text-purple-400/50 py-12"><i class="fas fa-inbox text-3xl mb-2"></i><p>No logs yet. Use /api/decode or /api/generate-jwt</p></div>';
+                        return;
+                    }
+                    container.innerHTML = logs.map(l => {
                         let isError = l.status >= 400;
-                        let statusColor = isError ? 'text-red-400 bg-red-900/30 border-red-500/50' : 'text-emerald-400 bg-emerald-900/30 border-emerald-500/50';
-                        return \`
-                        <div class="glass-panel p-3 sm:p-4 rounded-xl">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-3 mb-3 gap-2">
+                        let statusColor = isError ? 'text-red-400 bg-red-900/30' : 'text-green-400 bg-green-900/30';
+                        let statusIcon = isError ? 'fa-times-circle' : 'fa-check-circle';
+                        return `
+                        <div class="glass-panel rounded-xl p-4">
+                            <div class="flex flex-wrap justify-between items-center mb-3 pb-2 border-b border-purple-500/20 gap-2">
                                 <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-purple-300 font-bold text-xs bg-purple-900/30 px-2 py-1 rounded border border-purple-500/30">\${l.action}</span>
-                                    <span class="font-black text-white text-[11px] sm:text-xs tracking-wider">\${l.msg_name}</span>
-                                    <span class="text-gray-500 text-[9px]">\${l.time}</span>
+                                    <span class="bg-purple-900/40 text-purple-300 px-2 py-1 rounded text-xs font-bold">${l.action}</span>
+                                    <span class="text-white text-xs font-mono">${l.msg_name}</span>
+                                    <span class="text-gray-500 text-xs">${l.time}</span>
                                 </div>
-                                <span class="\${statusColor} border text-[10px] font-black px-3 py-1 rounded-full shadow-sm">\${l.status}</span>
+                                <span class="${statusColor} px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                                    <i class="fas ${statusIcon}"></i> ${l.status}
+                                </span>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div class="relative pt-2">
-                                    <div class="absolute -top-1 left-2 bg-[#0a0a0a] text-gray-400 text-[8px] font-black px-2 py-0.5 rounded-full border border-gray-700">NODE SENT</div>
-                                    <pre class="bg-[#050508] p-3 rounded-lg h-32 overflow-auto text-purple-300/80 border border-white/5 custom-scroll">\${JSON.stringify(l.payload, null, 2)}</pre>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                                <div>
+                                    <div class="text-purple-400/70 text-xs mb-1">📤 REQUEST</div>
+                                    <pre class="bg-black/50 rounded-lg p-2 text-purple-300/80 overflow-x-auto max-h-32">${typeof l.payload === 'object' ? JSON.stringify(l.payload, null, 2) : l.payload || '{}'}</pre>
                                 </div>
-                                <div class="relative pt-2">
-                                    <div class="absolute -top-1 left-2 bg-[#0a0a0a] text-gray-400 text-[8px] font-black px-2 py-0.5 rounded-full border border-gray-700">PYTHON DECODED</div>
-                                    <pre class="bg-[#050508] p-3 rounded-lg h-32 overflow-auto \${isError ? 'text-red-300/80' : 'text-emerald-300/80'} border border-white/5 custom-scroll">\${JSON.stringify(l.response, null, 2)}</pre>
+                                <div>
+                                    <div class="text-purple-400/70 text-xs mb-1">📥 RESPONSE</div>
+                                    <pre class="bg-black/50 rounded-lg p-2 ${isError ? 'text-red-300/80' : 'text-green-300/80'} overflow-x-auto max-h-32">${typeof l.response === 'object' ? JSON.stringify(l.response, null, 2) : l.response || '{}'}</pre>
                                 </div>
                             </div>
-                        </div>\`;
+                        </div>`;
                     }).join('');
-                } catch(e) {}
+                } catch(e) { console.error(e); }
             }
             setInterval(fetchLogs, 1500);
             fetchLogs();
@@ -203,4 +326,6 @@ def dashboard():
     return render_template_string(html)
 
 if __name__ == '__main__':
+    print("🌸 KING NEXUS Python Core Running on http://localhost:5000")
+    print("📡 Endpoints: /api/decode, /api/encode, /api/generate-jwt")
     app.run(debug=True, host='0.0.0.0', port=5000)
